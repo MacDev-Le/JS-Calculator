@@ -6,6 +6,18 @@ const display = document.getElementById('display');
 
 let justCalculated = false;
 
+// Smart Operator Handling
+
+function isOperator(char) {
+    return ['+','-','*','/'].includes(char);
+}
+
+// Get the last character in display.
+
+function getLastChar() {
+    return display.value.slice(-1);
+}
+
 // Function to append to display
 
 function appendToDisplay(value) {
@@ -16,30 +28,58 @@ function appendToDisplay(value) {
     if (justCalculated && !isNaN(value)) {
         display.value = value;
         justCalculated = false;
-        return;  //End the function
+        return;  // End the function
     }
 
-    // If the current display shows 0 and user enters a number, replace the 0 with the number pressed
-    if (currentValue === '0' && !isNaN(value)) {
-        display.value = value;
-    } 
-    
-    // "else if" = If the current display shows 0 and the user enters decimal, keep the 0
-    else if (currentValue === '0' && value === '.'){
+    // If we just calculated and the users presses on operator (add on or subtract)
+
+    if (justCalculated && isOperator(value)) {
         display.value = currentValue + value;
-    } 
-    
-    // "else if" = Prevent having multiple decimals on the screen
-    else if (value === '.') {
-        // Get the last number in the display
-        let lastNumber = currentValue.split('/[+\-\*/]').pop();
-        // Only add the decimal if the current number doesn't have it
-        if (!lastNumber.includes('.')) {
-            display.value = currentValue + value
+        justCalculated = false;
+        return;
+    }
+
+    // Handles operators
+
+    if (isOperator(value)) {
+        // Don't allow operator as first char (exception for minus)
+        if (currentValue === '0' && value !== '-') {
+            return; // Do nothing.
         }
-    } 
-    
-    else {
+
+        // If the last char is already an operator, replace it.
+        
+        if (isOperator(getLastChar())) {
+            display.value = currentValue.slice(0, -1) + value;
+        } else {
+            display.value = currentValue + value;
+        }
+
+        // Handle, If the current display shows 0 and user enters a number, replace the 0 with the number pressed
+    } else if (!isNaN(value)) {
+        if (currentValue === '0'){
+            display.value = value;
+        } else {
+            display.value = currentValue + value;
+        }
+    }
+
+    // ("else if" = Move to the next "if" operation if the first one was false) If the current display shows 0 and the user enters decimal, keep the 0
+    else if (value === '.'){
+        if (currentValue === '0') {
+            display.value = currentValue + value;
+        } else {
+            // Get the last number in the display after last operator
+            let parts = currentValue.split('/[+\-*/]');
+            let lastNumber = parts [parts.length - 1];
+
+            // Only add decimal if the number does not already have one.
+            if (!lastNumber.includes('.')) {
+                display.value = currentValue + value;
+            }
+
+        }
+    }  else {
         display.value = currentValue + value;
     }
     
